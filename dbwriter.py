@@ -5,10 +5,11 @@
 
 from writer import Writer
 from writer import transaction_fields
+import sqlite3
 
 class DbWriter(Writer):
   def __init__(self, db_conn_instance):
-    self.db_conn_instance = db_conn_instance
+    self.db_conn_instance = sqlite3.connect('trades.db')
     cursor = db_conn_instance.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS trades
       ({0} number,

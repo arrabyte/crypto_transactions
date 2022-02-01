@@ -15,14 +15,12 @@ from writer import Writer
 from writer import transaction_fields
 from csvwriter import CsvWriter
 from dbwriter import DbWriter
-import sqlite3
-import csv
 from reader import CsvReader, Reader
 
 #"id","time","market","side","type","size","price","total","fee","feeCurrency"
 #"5869147485","2021-12-27T19:17:46.252096+00:00","AVAX/USD","buy","Limit","5.8","118.7","688.46","0.001102","AVAX"
 #ftx_row_fields = {namedtuple("id", 0), "time": 1, "market":2 , "side": 3, "type": 4, "size": 5, "price": 6, "total": 7, "fee": 8, "feeCurrency": 9}
-def ftx_import_trades(writer: Writer, reader: Reader):
+def import_trades(writer: Writer, reader: Reader):
   FieldsPos = namedtuple("FieldsPos", "id time market side type size price total fee feeCurrency")
   ftx_row_fields_pos = FieldsPos(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
 
@@ -68,7 +66,7 @@ def ftx_import_trades(writer: Writer, reader: Reader):
 
     writer.write_rows(rows)
 
-def ftx_import_deposit(writer: Writer, reader: Reader):
+def import_deposit(writer: Writer, reader: Reader):
   FieldsPos = namedtuple("FieldsPos", "id time currency qta trans_hash")
   ftx_row_fields_pos = FieldsPos(0, 1, 2, 3, 6)
 
@@ -90,9 +88,9 @@ def ftx_import_deposit(writer: Writer, reader: Reader):
 
 if __name__ == "__main__":
   args = sys.argv[1:]
-  if len(args) == 2 and args[0] == '-type':
+  if len(args) == 2 and args[0] == '--type':
     # Select random nice phrase
-    export_type = args[0]
+    export_type = args[1]
     print("data_import import data to {1}".format(sys.argv, export_type))
   else:
     export_type = "db"
@@ -100,22 +98,12 @@ if __name__ == "__main__":
 
   #to_cvs = True
   if export_type == "db":
-    con = sqlite3.connect('trades.db')
-    writer = DbWriter(con)
+    writer = DbWriter('trades.db')
   else:
-    csv_writer = csv.DictWriter(sys.stdout,
-                            fieldnames=[transaction_fields.id,
-                                        transaction_fields.datetime,
-                                        transaction_fields.currency,
-                                        transaction_fields.operation,
-                                        transaction_fields.amount,
-                                        transaction_fields.exchange,
-                                        transaction_fields.hash],
-                            quotechar='\"', quoting=csv.QUOTE_NONNUMERIC, escapechar='\\')
-    writer = CsvWriter(csv_writer)
+    writer = CsvWriter()
 
-  ftx_import_trades(writer, CsvReader("/home/alex/Scaricati/trades.csv", skip_header=True))
-  ftx_import_deposit(writer, CsvReader("/home/alex/Scaricati/deposits.csv", skip_header=True))
+  import_trades(writer, CsvReader("/home/alex/Scaricati/trades.csv", skip_header=True))
+  import_deposit(writer, CsvReader("/home/alex/Scaricati/deposits.csv", skip_header=True))
 
   writer.finalize()
   pass
