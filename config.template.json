@@ -1,0 +1,10 @@
+{
+  "ftx": {
+    "exchange_data": "csv",
+    "import_format": "csv"
+  },
+  "trt": {
+    "exchange_data": "api",
+    "import_format": "db"
+  }
+}

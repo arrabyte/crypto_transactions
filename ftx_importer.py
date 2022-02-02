@@ -16,6 +16,8 @@ from writer import transaction_fields
 from csvwriter import CsvWriter
 from dbwriter import DbWriter
 from reader import CsvReader, Reader
+import argparse
+import json
 
 #"id","time","market","side","type","size","price","total","fee","feeCurrency"
 #"5869147485","2021-12-27T19:17:46.252096+00:00","AVAX/USD","buy","Limit","5.8","118.7","688.46","0.001102","AVAX"
@@ -87,19 +89,27 @@ def import_deposit(writer: Writer, reader: Reader):
     writer.write_rows(rows)
 
 if __name__ == "__main__":
-  args = sys.argv[1:]
-  if len(args) == 2 and args[0] == '--type':
-    # Select random nice phrase
-    export_type = args[1]
-    print("data_import import data to {1}".format(sys.argv, export_type))
-  else:
-    export_type = "db"
-  print("data_import import data to {1}".format(sys.argv, export_type))
+  parser = argparse.ArgumentParser(description='Import data from FTX exchange')
+  parser.add_argument('-c','--config', default='config.json', help='config file (default: config.json)')
+  cfg = {}
+  try:
+    args = parser.parse_args()
+  except:
+    parser.print_help()
+    sys.exit(1)
 
-  #to_cvs = True
-  if export_type == "db":
+  with open(args.config) as fp:
+    cfg = json.load(fp)
+
+  if "ftx" not in cfg:
+    print("config for ftx exchange is missing")
+    sys.exit(1)
+
+  ftx_cfg = cfg["ftx"]
+
+  if ftx_cfg["import_format"] == "db":
     writer = DbWriter('trades.db')
-  else:
+  elif ftx_cfg["import_format"] == "csv":
     writer = CsvWriter()
 
   import_trades(writer, CsvReader("/home/alex/Scaricati/trades.csv", skip_header=True))
